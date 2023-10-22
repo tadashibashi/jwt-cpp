@@ -2637,6 +2637,10 @@ namespace jwt {
 
 	public:
 		builder() = default;
+
+		explicit builder(const typename json_traits::object_type &payload):
+			payload_claims(payload), header_claims() { }
+
 		/**
 		 * Set a header claim.
 		 * \param id Name of the claim
