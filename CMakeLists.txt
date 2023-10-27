@@ -15,20 +15,24 @@ endif()
 
 project(jwt-cpp)
 
-option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
+option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" OFF)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
 
 option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF)
+option(JWT_EXTERNAL_NLOHMANN_JSON "Use find_package() to locate nlohmann-json" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
-option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
+option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" ON)
+option(JWT_DISABLE_DEFAULT_TRAITS "Do not link to default traits libraries" ON)
 
 set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
-set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+if (NOT JWT_DISABLE_TRAITS)
+  set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -66,16 +70,18 @@ if(JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
 endif()
 
-find_package(nlohmann_json CONFIG)
+if(JWT_EXTERNAL_NLOHMANN_JSON)
+  find_package(nlohmann_json CONFIG)
 
-if(NOT nlohmann_json_FOUND)
-  message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
-  include(FetchContent)
-  FetchContent_Declare(nlohmann_json
-      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-      URL_MD5 127794b2c82c0c5693805feaa2a703e2
-  )
-  FetchContent_MakeAvailable(nlohmann_json)
+  if(NOT nlohmann_json_FOUND)
+    message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
+    include(FetchContent)
+    FetchContent_Declare(nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+        URL_MD5 127794b2c82c0c5693805feaa2a703e2
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+  endif()
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
